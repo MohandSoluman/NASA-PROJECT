@@ -1,2 +1,2 @@
 # NASA-PROJECT
-full stack project by react express and mango database
+full stack project with react node and mongo database
