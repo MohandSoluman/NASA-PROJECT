@@ -1,0 +1,20 @@
+{
+  "name": "nasa-project",
+  "version": "1.0.0",
+  "description": "full stack project with react node and mongo database",
+  "main": "index.js",
+  "scripts": {
+    "install-all": "npm run install-client && npm run install-server",
+    "install-client": "cd client && npm install",
+    "install-server": "cd server && npm install",
+    "start": "node server/src/index.js",
+    "client": "cd client && npm run build",
+    "server": "cd server && npm start",
+    "deploy":"npm run client && npm run server",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+
+}
