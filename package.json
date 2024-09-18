@@ -11,6 +11,7 @@
     "client": "cd client && npm run build",
     "server": "cd server && npm start",
     "deploy":"npm run client && npm run server",
+    "deploy-cluster":"npm run client && npm run cluster --prefix server ",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
@@ -18,3 +19,4 @@
   "license": "ISC"
 
 }
+

@@ -7,7 +7,7 @@ const launch = {
   rocket: "Falcon 9",
   launchDate: new Date("Decemper 27, 2030"),
   target: "kepler-224 b",
-  customer: ["ZTM", "MohandSoluman"],
+  customers: ["ZTM", "MohandSoluman"],
   success: true,
   upcoming: true,
 };
@@ -25,7 +25,7 @@ const addNewLaunch = (launch) => {
       flightNumber: lastFlightNum,
       upcoming: true,
       success: true,
-      customer: ["cm1", "cm2", "cm3"],
+      customers: ["cm1", "cm2", "cm3"],
     })
   );
 };
