@@ -1,7 +1,8 @@
+const planets = require("./planet.momgo");
+
 const { parse } = require("csv-parse");
 const path = require("path");
 const fs = require("fs");
-const habitablePlanets = [];
 
 const isHabitablePlanet = (planet) => {
   return (
@@ -25,24 +26,44 @@ const loadPlanetsData = () => {
       )
       .on("data", (data) => {
         if (isHabitablePlanet(data)) {
-          habitablePlanets.push(data);
+          savePlanet(data);
         }
       })
       .on("error", (err) => {
         console.log(err);
         reject(err);
       })
-      .on("end", () => {
-        console.log(`${habitablePlanets.length} habitable planets found!`);
+      .on("end", async () => {
+        const foundPlanets = (await getAllPlanets()).length;
+        console.log(`${foundPlanets} habitable planets found!`);
         resolve();
       });
   });
 };
 
-const getAllPlanets=()=>{
-  return habitablePlanets;
-}
+const getAllPlanets = async () => {
+  return await planets.find({});
+};
+
+const savePlanet = async (planet) => {
+  try {
+    return await planets.updateOne(
+      {
+        keplerName: planet.kepler_name,
+      },
+      {
+        keplerName: planet.kepler_name,
+      },
+      {
+        upsert: true,
+      }
+    );
+  } catch (error) {
+    console.error("something erro..");
+  }
+};
+
 module.exports = {
   loadPlanetsData,
-  getAllPlanets
+  getAllPlanets,
 };

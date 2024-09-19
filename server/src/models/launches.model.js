@@ -1,4 +1,5 @@
-const launches = new Map();
+const launches = require("./launches.mongo");
+const planets = require("./planet.momgo");
 
 let lastFlightNum = 100;
 const launch = {
@@ -6,19 +7,35 @@ const launch = {
   mission: "Kepler Exploration X",
   rocket: "Falcon 9",
   launchDate: new Date("Decemper 27, 2030"),
-  target: "kepler-224 b",
+  target: "Kepler-1652 b",
   customers: ["ZTM", "MohandSoluman"],
   success: true,
   upcoming: true,
 };
 
-launches.set(launch.flightNumber, launch);
+const saveLaunch = async (launch) => {
+  const planet = await planets.findOne({ keplerName: launch.target });
 
-const getAllLaunches = () => {
-  return Array.from(launches.values());
+  if (!planet) {
+    throw new Error("no planet matching found..");
+  }
+  await launches.updateOne(
+    {
+      flightNumber: launch.flightNumber,
+    },
+    launch,
+    {
+      upsert: true,
+    }
+  );
 };
-const addNewLaunch = (launch) => {
+
+const getAllLaunches = async () => {
+  return await launches.find({}, { _id: 0, __v: 0 });
+};
+const addNewLaunch = async (launch) => {
   lastFlightNum++;
+  await launches.create({});
   launches.set(
     lastFlightNum,
     Object.assign(launch, {
@@ -39,7 +56,7 @@ const abortLaunchById = (id) => {
 
   return aborted;
 };
-
+saveLaunch(launch);
 module.exports = {
   isExistsLaunchId,
   getAllLaunches,
