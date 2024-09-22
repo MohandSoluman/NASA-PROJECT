@@ -7,6 +7,7 @@ const app = require("./app");
 const http = require("http");
 const server = http.createServer(app);
 const { loadPlanetsData } = require("./models/planets.model");
+const { loadLaunchesData } = require("./models/launches.model");
 
 const PORT = process.env.PORT;
 
@@ -23,6 +24,7 @@ mongoose
   .catch((err) => console.log(err));
 async function startServer() {
   await loadPlanetsData();
+  await loadLaunchesData();
   server.listen(PORT, () => {
     console.log(`Listening on ${PORT}`);
   });
