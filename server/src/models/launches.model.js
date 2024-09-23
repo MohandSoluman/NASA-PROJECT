@@ -3,23 +3,30 @@ const planets = require("./planet.momgo");
 const axios = require("axios");
 
 const DEFAULT_FLIGHT_NUMBER = 100;
-const SPACEX_API_URL = "https://api.spacexData.com/v4/launches/query";
-("https://api.spacexdata.com/v4/launches/query");
-const launch = {
-  flightNumber: 100,
-  mission: "Kepler Exploration X",
-  rocket: "Falcon 9",
-  launchDate: new Date("Decemper 27, 2030"),
-  target: "Kepler-1652 b",
-  customers: ["ZTM", "MohandSoluman"],
-  success: true,
-  upcoming: true,
-};
+const SPACEX_API_URL = "https://api.spacexData.com/v5/launches/query";
 
-const loadLaunchesData = async () => {
+const saveLaunch = async (launch) => {
+  await launchesDatabase.findOneAndUpdate(
+    {
+      flightNumber: launch.flightNumber,
+    },
+    launch,
+    {
+      upsert: true,
+    }
+  );
+};
+const findLaunch = async (filter) => {
+  return await launchesDatabase.findOne(filter);
+};
+const isExistsLaunchId = async (id) => {
+  return await findLaunch({ flightNumber: id });
+};
+const populateLaunches = async () => {
   const response = await axios.post(SPACEX_API_URL, {
     query: {},
     options: {
+      pagination: false,
       populate: [
         {
           path: "rocket",
@@ -27,30 +34,45 @@ const loadLaunchesData = async () => {
         },
         {
           path: "payloads",
-          customers: 1,
+          select: {
+            customers: 1,
+          },
         },
       ],
     },
   });
 
   const launchDocs = response.data.docs;
-  for (const launchDoc in launchDocs) {
+
+  for (const launchDoc of launchDocs) {
     const payloads = launchDoc?.["payloads"];
-    console.log(payloads);
     const customers = payloads?.flatMap((payloads) => {
       return payloads["customers"];
     });
+
     const launch = {
       flightNumber: launchDoc["flight_number"],
-      mission: launchDoc["mission_name"],
+      mission: launchDoc["name"],
       rocket: launchDoc["rocket"]?.["name"],
-      launchDate: [" launchDoc"]?.["date_local"],
+      launchDate: launchDoc?.["date_local"],
       success: launchDoc["success"],
       upcoming: launchDoc["upcoming"],
       customers,
     };
+
+    await saveLaunch(launch);
+    console.log(`Launched ${launch.flightNumber} saved.`);
   }
-  console.log(launch);
+};
+const loadLaunchesData = async () => {
+  const firstLaunch = await findLaunch({ flightNumber: 1, rocket: "Falcon 1" });
+  if (firstLaunch) {
+    console.log("Launches data already loaded.");
+    return;
+  } else {
+    await populateLaunches();
+    console.log("Launches data loaded successfully.");
+  }
 };
 const getLastFlightNumber = async () => {
   const { flightNumber } = await launchesDatabase
@@ -62,32 +84,23 @@ const getLastFlightNumber = async () => {
   }
   return flightNumber;
 };
-const saveLaunch = async (launch) => {
+const getAllLaunches = async (skip, limit) => {
+  try {
+    return await launchesDatabase
+      .find({}, { _id: 0, __v: 0 })
+      .sort({ flightNumber: 1 })
+      .skip(skip)
+      .limit(limit);
+  } catch (error) {
+    console.log(error);
+  }
+};
+const scudualNewLaunch = async (launch) => {
   const planet = await planets.findOne({ keplerName: launch.target });
 
   if (!planet) {
     throw new Error("no planet matching found..");
   }
-  await launchesDatabase.findOneAndUpdate(
-    {
-      flightNumber: launch.flightNumber,
-    },
-    launch,
-    {
-      upsert: true,
-    }
-  );
-};
-
-const getAllLaunches = async () => {
-  try {
-    return await launchesDatabase.find({}, { _id: 0, __v: 0 });
-  } catch (error) {
-    console.log(error);
-  }
-};
-
-const scudualNewLaunch = async (launch) => {
   const flightNumber = (await getLastFlightNumber()) + 1;
 
   const newLaunch = Object.assign(launch, {
@@ -98,10 +111,6 @@ const scudualNewLaunch = async (launch) => {
   });
 
   await saveLaunch(newLaunch);
-};
-
-const isExistsLaunchId = async (id) => {
-  return await launchesDatabase.findOne({ flightNumber: id });
 };
 const abortLaunchById = async (id) => {
   const aborted = await launchesDatabase.updateOne(
@@ -114,8 +123,6 @@ const abortLaunchById = async (id) => {
 
   return aborted.modifiedCount === 1;
 };
-
-saveLaunch(launch);
 
 module.exports = {
   loadLaunchesData,
